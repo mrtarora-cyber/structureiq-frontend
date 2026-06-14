@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StructureIQ — Trading Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        .header {
+            background: #0d0d1a;
+            border-bottom: 1px solid #1a1a2e;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00d4ff;
+            letter-spacing: 1px;
+        }
+
+        .market-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.open { background: #00ff88; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* PRICE TICKER */
+        .ticker {
+            background: #0d0d1a;
+            padding: 10px 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            border-bottom: 1px solid #1a1a2e;
+        }
+
+        .ticker-item {
+            background: #111124;
+            border: 1px solid #1a1a2e;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .ticker-name {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .ticker-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .ticker-change {
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .positive { color: #00ff88; }
+        .negative { color: #ff4444; }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            background: #0d0d1a;
+            border-bottom: 1px solid #1a1a2e;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #00d4ff;
+            border-bottom-color: #00d4ff;
+        }
+
+        /* CONTENT */
+        .content {
+            padding: 16px;
+            display: none;
+        }
+
+        .content.active { display: block; }
+
+        /* CARDS */
+        .card {
+            background: #111124;
+            border: 1px solid #1a1a2e;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        /* SIGNAL CARDS */
+        .signal-card {
+            background: #111124;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border-left: 4px solid #666;
+        }
+
+        .signal-card.BUY { border-left-color: #00ff88; }
+        .signal-card.SELL { border-left-color: #ff4444; }
+
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .signal-type {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .signal-type.BUY { color: #00ff88; }
+        .signal-type.SELL { color: #ff4444; }
+
+        .confidence-badge {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 12px;
+            color: #00d4ff;
+        }
+
+        .signal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .signal-item label {
+            font-size: 10px;
+            color: #666;
+            display: block;
+        }
+
+        .signal-item span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .signal-explanation {
+            font-size: 12px;
+            color: #aaa;
+            line-height: 1.5;
+            background: #0a0a0f;
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 8px;
+        }
+
+        /* STRUCTURE */
+        .structure-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #1a1a2e;
+        }
+
+        .structure-item:last-child { border-bottom: none; }
+
+        .event-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .event-HH, .event-HL { background: #003322; color: #00ff88; }
+        .event-LH, .event-LL { background: #330011; color: #ff4444; }
+        .event-BOS { background: #002233; color: #00d4ff; }
+        .event-CHoCH { background: #332200; color: #ffaa00; }
+
+        /* TREND DISPLAY */
+        .trend-display {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .trend-label {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .trend-BULLISH { color: #00ff88; }
+        .trend-BEARISH { color: #ff4444; }
+        .trend-RANGE { color: #ffaa00; }
+
+        /* RISK */
+        .risk-meter {
+            height: 8px;
+            background: #1a1a2e;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .risk-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: #00ff88;
+            transition: width 0.3s;
+        }
+
+        .risk-fill.warning { background: #ffaa00; }
+        .risk-fill.danger { background: #ff4444; }
+
+        /* POSITION SIZER */
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            color: #888;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            background: #0a0a0f;
+            border: 1px solid #1a1a2e;
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #00d4ff;
+            color: #000;
+            margin-top: 8px;
+        }
+
+        /* JOURNAL */
+        .journal-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #1a1a2e;
+            font-size: 13px;
+        }
+
+        /* EMPTY STATE */
+        .empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #444;
+        }
+
+        .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+        /* LOADING */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #444;
+            font-size: 13px;
+        }
+
+        /* CHART */
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="logo">⚡ StructureIQ</div>
+    <div class="market-status">
+        <div class="status-dot" id="marketDot"></div>
+        <span id="marketStatus">Loading...</span>
+    </div>
+</div>
+
+<!-- PRICE TICKER -->
+<div class="ticker">
+    <div class="ticker-item">
+        <div class="ticker-name">NIFTY 50</div>
+        <div class="ticker-price" id="niftyPrice">--</div>
+        <div class="ticker-change" id="niftyChange">--</div>
+    </div>
+    <div class="ticker-item">
+        <div class="ticker-name">SENSEX</div>
+        <div class="ticker-price" id="sensexPrice">--</div>
+        <div class="ticker-change" id="sensexChange">--</div>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+    <div class="tab active" onclick="showTab('signals')">🟢 Signals</div>
+    <div class="tab" onclick="showTab('structure')">🏗️ Structure</div>
+    <div class="tab" onclick="showTab('risk')">⚠️ Risk</div>
+    <div class="tab" onclick="showTab('journal')">📖 Journal</div>
+</div>
+
+<!-- SIGNALS TAB -->
+<div class="content active" id="tab-signals">
+    <div id="signalsList">
+        <div class="loading">Loading signals...</div>
+    </div>
+</div>
+
+<!-- STRUCTURE TAB -->
+<div class="content" id="tab-structure">
+    <div class="card">
+        <div class="card-title">Current Trend</div>
+        <div class="trend-display">
+            <div class="trend-label trend-RANGE" id="trendLabel">--</div>
+            <div style="font-size:13px;color:#666">Based on swing structure</div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-title">Recent Structure Events</div>
+        <div id="structureEvents">
+            <div class="loading">Loading...</div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-title">Key Price Zones</div>
+        <div id="priceZones">
+            <div class="loading">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<!-- RISK TAB -->
+<div class="content" id="tab-risk">
+    <div class="card">
+        <div class="card-title">Today's Risk Status</div>
+        <div style="text-align:center;padding:10px">
+            <div style="font-size:24px;font-weight:700" id="riskStatus">--</div>
+            <div style="font-size:13px;color:#888;margin-top:4px" id="riskMessage">--</div>
+        </div>
+        <div class="risk-meter">
+            <div class="risk-fill" id="riskFill" style="width:0%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#666">
+            <span>Today's P&L: <span id="dailyPnl" style="color:#fff">₹0</span></span>
+            <span>Limit: <span id="dailyLimit" style="color:#fff">₹200</span></span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Position Size Calculator</div>
+        <div class="input-group">
+            <label>Symbol</label>
+            <select id="calcSymbol">
+                <option value="NIFTY">NIFTY</option>
+                <option value="SENSEX">SENSEX</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>Entry Price</label>
+            <input type="number" id="calcEntry" placeholder="e.g. 22500">
+        </div>
+        <div class="input-group">
+            <label>Stop Loss</label>
+            <input type="number" id="calcSL" placeholder="e.g. 22400">
+        </div>
+        <button class="btn" onclick="calculateSize()">Calculate Position Size</button>
+        <div id="calcResult" style="margin-top:12px"></div>
+    </div>
+</div>
+
+<!-- JOURNAL TAB -->
+<div class="content" id="tab-journal">
+    <div class="card">
+        <div class="card-title">Log a Trade</div>
+        <div class="input-group">
+            <label>Symbol</label>
+            <select id="jSymbol">
+                <option value="NIFTY">NIFTY</option>
+                <option value="SENSEX">SENSEX</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>Direction</label>
+            <select id="jDirection">
+                <option value="BUY">BUY</option>
+                <option value="SELL">SELL</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>Entry Price</label>
+            <input type="number" id="jEntry" placeholder="Entry price">
+        </div>
+        <div class="input-group">
+            <label>Exit Price</label>
+            <input type="number" id="jExit" placeholder="Exit price">
+        </div>
+        <div class="input-group">
+            <label>Quantity (lots)</label>
+            <input type="number" id="jQty" placeholder="1" value="1">
+        </div>
+        <div class="input-group">
+            <label>Notes (optional)</label>
+            <input type="text" id="jNotes" placeholder="What did you learn?">
+        </div>
+        <button class="btn" onclick="logTrade()">Save Trade</button>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Trade History</div>
+        <div id="tradeHistory">
+            <div class="loading">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = 'https://structureiq-backend.onrender.com';
+
+    // ── TAB SWITCHING ─────────────────────────────────────────
+    function showTab(name) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    // ── FETCH MARKET STATUS ───────────────────────────────────
+    async function fetchMarketStatus() {
+        try {
+            const res = await fetch(`${API}/`);
+            const data = await res.json();
+            const isOpen = data.market_open;
+            document.getElementById('marketStatus').textContent = isOpen ? 'Market Open' : 'Market Closed';
+            document.getElementById('marketDot').className = 'status-dot' + (isOpen ? ' open' : '');
+        } catch(e) {
+            document.getElementById('marketStatus').textContent = 'Connecting...';
+        }
+    }
+
+    // ── FETCH LIVE PRICES ─────────────────────────────────────
+    async function fetchPrices() {
+        try {
+            const [nifty, sensex] = await Promise.all([
+                fetch(`${API}/api/market/live/NIFTY`).then(r => r.json()),
+                fetch(`${API}/api/market/live/SENSEX`).then(r => r.json())
+            ]);
+
+            if (nifty.price) {
+                document.getElementById('niftyPrice').textContent =
+                    nifty.price.last_price?.toLocaleString('en-IN') || '--';
+                const chg = nifty.price.change || 0;
+                const chgPct = nifty.price.change_percent || 0;
+                const el = document.getElementById('niftyChange');
+                el.textContent = `${chg > 0 ? '+' : ''}${chg.toFixed(2)} (${chgPct.toFixed(2)}%)`;
+                el.className = 'ticker-change ' + (chg >= 0 ? 'positive' : 'negative');
+            }
+
+            if (sensex.price) {
+                document.getElementById('sensexPrice').textContent =
+                    sensex.price.last_price?.toLocaleString('en-IN') || '--';
+                const chg = sensex.price.change || 0;
+                const chgPct = sensex.price.change_percent || 0;
+                const el = document.getElementById('sensexChange');
+                el.textContent = `${chg > 0 ? '+' : ''}${chg.toFixed(2)} (${chgPct.toFixed(2)}%)`;
+                el.className = 'ticker-change ' + (chg >= 0 ? 'positive' : 'negative');
+            }
+        } catch(e) {
+            console.log('Price fetch error:', e);
+        }
+    }
+
+    // ── FETCH SIGNALS ─────────────────────────────────────────
+    async function fetchSignals() {
+        try {
+            const res = await fetch(`${API}/api/signals/active`);
+            const data = await res.json();
+            const signals = data.signals || [];
+            const container = document.getElementById('signalsList');
+
+            if (signals.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <div class="empty-icon">📡</div>
+                        <div>No active signals right now</div>
+                        <div style="font-size:12px;margin-top:8px">
+                            StructureIQ is watching the market
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = signals.map(s => `
+                <div class="signal-card ${s.signal_type}">
+                    <div class="signal-header">
+                        <span class="signal-type ${s.signal_type}">
+                            ${s.signal_type === 'BUY' ? '🟢' : '🔴'} ${s.signal_type} — ${s.symbol}
+                        </span>
+                        <span class="confidence-badge">${s.confidence}%</span>
+                    </div>
+                    <div class="signal-grid">
+                        <div class="signal-item">
+                            <label>Entry</label>
+                            <span>₹${s.entry_price?.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div class="signal-item">
+                            <label>Stop Loss</label>
+                            <span style="color:#ff4444">₹${s.stop_loss?.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div class="signal-item">
+                            <label>Target 1</label>
+                            <span style="color:#00ff88">₹${s.target_1?.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div class="signal-item">
+                            <label>Target 2</label>
+                            <span style="color:#00ff88">₹${s.target_2?.toLocaleString('en-IN')}</span>
+                        </div>
+                    </div>
+                    <div style="font-size:12px;color:#888">
+                        R:R Ratio — <span style="color:#00d4ff">${s.rr_ratio}R</span> &nbsp;|&nbsp;
+                        ${s.timeframe} &nbsp;|&nbsp;
+                        ${new Date(s.created_at).toLocaleTimeString('en-IN')}
+                    </div>
+                    <div class="signal-explanation">${s.explanation}</div>
+                </div>
+            `).join('');
+        } catch(e) {
+            document.getElementById('signalsList').innerHTML =
+                '<div class="empty"><div>Could not load signals</div></div>';
+        }
+    }
+
+    // ── FETCH STRUCTURE ───────────────────────────────────────
+    async function fetchStructure() {
+        try {
+            const res = await fetch(`${API}/api/market/structure/NIFTY`);
+            const data = await res.json();
+            const events = data.structure || [];
+
+            if (events.length === 0) {
+                document.getElementById('structureEvents').innerHTML =
+                    '<div class="empty"><div>No structure events yet</div></div>';
+                return;
+            }
+
+            // Update trend
+            const latest = events[0];
+            if (latest.trend) {
+                const trendEl = document.getElementById('trendLabel');
+                trendEl.textContent = latest.trend;
+                trendEl.className = 'trend-label trend-' + latest.trend;
+            }
+
+            document.getElementById('structureEvents').innerHTML =
+                events.slice(0, 8).map(e => `
+                    <div class="structure-item">
+                        <div>
+                            <span class="event-badge event-${e.event_type}">${e.event_type}</span>
+                            <span style="font-size:12px;color:#888;margin-left:8px">
